@@ -151,7 +151,7 @@ if st.session_state.current_view == 'dashboard':
                     with col_r1:
                         rev_reason = st.text_area("Revizyon Gerekçesi ve Kapsamı", placeholder="Örn: Tolerans değerleri üretim kolaylığı için genişletildi.")
                     with col_r2:
-                        affected_op = st.text_area("Etkilenen Operasyon / Departman", placeholder="Örn: CNC Freze Hattı")
+                        affected_op = st.text_area("Etkilenebilecek Operasyon", placeholder="Örn: CNC Freze Hattı")
                     diff_desc = ""
                 else:
                     rev_reason = ""
@@ -280,7 +280,7 @@ elif st.session_state.current_view == 'detail':
             with r_col1:
                 st.info(f"**Revizyon Gerekçesi ve Kapsamı:**\n\n{doc.get('rev_reason', '-')}")
             with r_col2:
-                st.warning(f"**Etkilenen Operasyon / Departman:**\n\n{doc.get('affected_op', '-')}")
+                st.warning(f"**Etkilenebilecek Operasyon:**\n\n{doc.get('affected_op', '-')}")
         
         st.markdown("---")
         st.subheader("Onay Akışı Durumu")
