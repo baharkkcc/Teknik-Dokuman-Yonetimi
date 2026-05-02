@@ -146,13 +146,13 @@ if st.session_state.current_view == 'dashboard':
                 
                 if upload_type == "Mevcut Dokümanı Revize Et":
                     st.markdown("---")
-                    st.subheader("Değişiklik / Revizyon Gerekçesi")
+                    st.subheader("Revizyon Bilgileri")
                     col_r1, col_r2 = st.columns(2)
                     with col_r1:
-                        rev_reason = st.text_area("Değişiklik Sebebi", placeholder="Örn: Müşteri şikayeti üzerine toleranslar daraltıldı.")
+                        rev_reason = st.text_area("Revizyon Gerekçesi ve Kapsamı", placeholder="Örn: Tolerans değerleri üretim kolaylığı için genişletildi.")
                     with col_r2:
-                        affected_op = st.text_area("Etkilenen Operasyon", placeholder="Örn: CNC Freze - Operasyon 20")
-                    diff_desc = st.text_area("Değişiklik Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
+                        affected_op = st.text_area("Etkilenen Operasyon / Departman", placeholder="Örn: CNC Freze Hattı")
+                    diff_desc = ""
                 else:
                     rev_reason = ""
                     affected_op = ""
@@ -262,16 +262,14 @@ elif st.session_state.current_view == 'detail':
         status_color = "orange" if doc['status'] == "Beklemede" else "green" if doc['status'] == "Onaylandı" else "red" if doc['status'] == "Reddedildi" else "grey"
         col3.markdown(f"**Genel Durum:** :{status_color}[{doc['status']}]")
         
-        if doc.get('rev_reason') or doc.get('affected_op') or doc.get('diff_desc'):
+        if doc.get('rev_reason') or doc.get('affected_op'):
             st.markdown("---")
-            st.subheader("Değişiklik ve Revizyon Raporu")
-            r_col1, r_col2, r_col3 = st.columns(3)
+            st.subheader("Revizyon Raporu")
+            r_col1, r_col2 = st.columns(2)
             with r_col1:
-                st.info(f"**Değişiklik Sebebi:**\n\n{doc.get('rev_reason', '-')}")
+                st.info(f"**Revizyon Gerekçesi ve Kapsamı:**\n\n{doc.get('rev_reason', '-')}")
             with r_col2:
-                st.warning(f"**Etkilenen Operasyon:**\n\n{doc.get('affected_op', '-')}")
-            with r_col3:
-                st.success(f"**Değişiklik Özeti:**\n\n{doc.get('diff_desc', '-')}")
+                st.warning(f"**Etkilenen Operasyon / Departman:**\n\n{doc.get('affected_op', '-')}")
         
         st.markdown("---")
         st.subheader("Onay Akışı Durumu")
