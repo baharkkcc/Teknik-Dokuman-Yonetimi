@@ -146,13 +146,13 @@ if st.session_state.current_view == 'dashboard':
                 
                 if upload_type == "Mevcut Dokümanı Revize Et":
                     st.markdown("---")
-                    st.markdown("### Değişiklik / Revizyon Gerekçesi")
+                    st.subheader("Değişiklik / Revizyon Gerekçesi")
                     col_r1, col_r2 = st.columns(2)
                     with col_r1:
                         rev_reason = st.text_area("Değişiklik Sebebi", placeholder="Örn: Müşteri şikayeti üzerine toleranslar daraltıldı.")
                     with col_r2:
                         affected_op = st.text_area("Etkilenen Operasyon", placeholder="Örn: CNC Freze - Operasyon 20")
-                    diff_desc = st.text_area("Eski vs Yeni Fark Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
+                    diff_desc = st.text_area("Değişiklik Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
                 else:
                     rev_reason = ""
                     affected_op = ""
@@ -186,13 +186,15 @@ if st.session_state.current_view == 'dashboard':
 
     st.subheader("Doküman Listesi")
 
-    f_col1, f_col2, f_col3 = st.columns(3)
-    with f_col1:
-        type_filter = st.selectbox("Tip Filtresi", ["Tümü", "Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
-    with f_col2:
-        status_filter = st.selectbox("Durum Filtresi", ["Aktif Olanlar", "Beklemede", "Onaylandı", "Reddedildi", "Arşivlendi", "Tümü (Arşiv Dahil)"])
-    with f_col3:
-        search_filter = st.text_input("Doküman Adı / No Ara...")
+    with st.form("filter_form"):
+        f_col1, f_col2, f_col3 = st.columns(3)
+        with f_col1:
+            type_filter = st.selectbox("Tip Filtresi", ["Tümü", "Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
+        with f_col2:
+            status_filter = st.selectbox("Durum Filtresi", ["Aktif Olanlar", "Beklemede", "Onaylandı", "Reddedildi", "Arşivlendi", "Tümü (Arşiv Dahil)"])
+        with f_col3:
+            search_filter = st.text_input("Doküman Adı / No Ara...")
+        search_submitted = st.form_submit_button("Ara / Filtrele")
 
     try:
         all_docs = requests.get(f"{API_URL}/documents/").json()
@@ -262,17 +264,17 @@ elif st.session_state.current_view == 'detail':
         
         if doc.get('rev_reason') or doc.get('affected_op') or doc.get('diff_desc'):
             st.markdown("---")
-            st.markdown("### Değişiklik ve Revizyon Raporu")
+            st.subheader("Değişiklik ve Revizyon Raporu")
             r_col1, r_col2, r_col3 = st.columns(3)
             with r_col1:
                 st.info(f"**Değişiklik Sebebi:**\n\n{doc.get('rev_reason', '-')}")
             with r_col2:
                 st.warning(f"**Etkilenen Operasyon:**\n\n{doc.get('affected_op', '-')}")
             with r_col3:
-                st.success(f"**Eski vs Yeni Fark:**\n\n{doc.get('diff_desc', '-')}")
+                st.success(f"**Değişiklik Özeti:**\n\n{doc.get('diff_desc', '-')}")
         
         st.markdown("---")
-        st.markdown("### Onay Akışı Durumu")
+        st.subheader("Onay Akışı Durumu")
         
         has_pending_actions = False
         for app in doc['approvals']:
