@@ -87,6 +87,7 @@ function renderTable() {
         if(doc.status === 'Beklemede') statusClass = 'status-beklemede';
         else if(doc.status === 'Onaylandı') statusClass = 'status-onaylandi';
         else if(doc.status === 'Reddedildi') statusClass = 'status-reddedildi';
+        else if(doc.status === 'Arşivlendi') statusClass = 'status-arsivlendi';
 
         tr.className = 'row-clickable';
         tr.onclick = (e) => {
@@ -141,6 +142,12 @@ function setupEventListeners() {
         
         if(!docFile.files[0]) {
             alert("Lütfen bir PDF dosyası seçin.");
+            return;
+        }
+
+        const pendingRevision = documents.find(d => d.docNo === docNo && d.status === 'Beklemede');
+        if (pendingRevision) {
+            alert(`Hata: ${docNo} numaralı dokümanın şu anda incelemede olan bir revizyonu var. Aynı anda birden fazla revizyon onaya sunulamaz.`);
             return;
         }
 
@@ -217,6 +224,12 @@ function setupEventListeners() {
 window.approveDoc = function(id) {
     const doc = documents.find(d => d.id === id);
     if(doc) {
+        documents.forEach(d => {
+            if (d.docNo === doc.docNo && d.id !== doc.id && d.status === 'Onaylandı') {
+                d.status = 'Arşivlendi';
+            }
+        });
+        
         doc.status = "Onaylandı";
         doc.feedback = "Onaylandı";
         doc.approver = "Yönetici";
@@ -264,6 +277,7 @@ function showPreview(id) {
     if(doc.status === 'Beklemede') statusClass = 'status-beklemede';
     else if(doc.status === 'Onaylandı') statusClass = 'status-onaylandi';
     else if(doc.status === 'Reddedildi') statusClass = 'status-reddedildi';
+    else if(doc.status === 'Arşivlendi') statusClass = 'status-arsivlendi';
 
     previewDetails.innerHTML = `
         <div><strong style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Döküman No</strong> <span style="color: var(--text-primary); font-size: 1.1rem;">${doc.docNo}</span></div>

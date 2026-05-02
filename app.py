@@ -50,11 +50,16 @@ def view_document(doc_id):
     st.session_state.current_view = 'detail'
 
 def approve_doc(doc_id):
+    target_doc = next((d for d in st.session_state.documents if d['id'] == doc_id), None)
+    if not target_doc: return
+    
     for d in st.session_state.documents:
-        if d['id'] == doc_id:
-            d['status'] = "Onaylandı"
-            d['feedback'] = "Onaylandı"
-            d['approver'] = "Yönetici"
+        if d['docNo'] == target_doc['docNo'] and d['id'] != doc_id and d['status'] == "Onaylandı":
+            d['status'] = "Arşivlendi"
+            
+    target_doc['status'] = "Onaylandı"
+    target_doc['feedback'] = "Onaylandı"
+    target_doc['approver'] = "Yönetici"
 
 def reject_doc(doc_id, feedback):
     for d in st.session_state.documents:
@@ -86,30 +91,34 @@ if st.session_state.current_view == 'dashboard':
 
             if submitted:
                 if uploaded_file is not None and doc_no and doc_name:
-                    file_bytes = uploaded_file.read()
-                    encoded = base64.b64encode(file_bytes).decode('utf-8')
-                    file_data_url = f"data:application/pdf;base64,{encoded}"
-                    
-                    months = ["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
-                    now = datetime.datetime.now()
-                    date_str = f"{now.day} {months[now.month]} {now.year}"
-                    
-                    new_doc = {
-                        "id": int(now.timestamp()),
-                        "docNo": doc_no,
-                        "docName": doc_name,
-                        "type": doc_type,
-                        "date": date_str,
-                        "uploader": "Mevcut Kullanıcı",
-                        "approver": "-",
-                        "file": uploaded_file.name,
-                        "status": "Beklemede",
-                        "feedback": "",
-                        "fileData": file_data_url
-                    }
-                    st.session_state.documents.append(new_doc)
-                    st.success("Doküman başarıyla yüklendi!")
-                    st.rerun()
+                    pending_rev = next((d for d in st.session_state.documents if d['docNo'] == doc_no and d['status'] == 'Beklemede'), None)
+                    if pending_rev:
+                        st.error(f"Hata: {doc_no} numaralı dokümanın şu anda incelemede olan bir revizyonu var. Aynı anda birden fazla revizyon onaya sunulamaz.")
+                    else:
+                        file_bytes = uploaded_file.read()
+                        encoded = base64.b64encode(file_bytes).decode('utf-8')
+                        file_data_url = f"data:application/pdf;base64,{encoded}"
+                        
+                        months = ["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+                        now = datetime.datetime.now()
+                        date_str = f"{now.day} {months[now.month]} {now.year}"
+                        
+                        new_doc = {
+                            "id": int(now.timestamp()),
+                            "docNo": doc_no,
+                            "docName": doc_name,
+                            "type": doc_type,
+                            "date": date_str,
+                            "uploader": "Mevcut Kullanıcı",
+                            "approver": "-",
+                            "file": uploaded_file.name,
+                            "status": "Beklemede",
+                            "feedback": "",
+                            "fileData": file_data_url
+                        }
+                        st.session_state.documents.append(new_doc)
+                        st.success("Doküman başarıyla yüklendi!")
+                        st.rerun()
                 else:
                     st.error("Lütfen tüm alanları doldurun ve bir PDF dosyası seçin.")
 
@@ -120,7 +129,7 @@ if st.session_state.current_view == 'dashboard':
     with f_col1:
         type_filter = st.selectbox("Tip Filtresi", ["Tümü", "Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
     with f_col2:
-        status_filter = st.selectbox("Durum Filtresi", ["Tümü", "Beklemede", "Onaylandı", "Reddedildi"])
+        status_filter = st.selectbox("Durum Filtresi", ["Tümü", "Beklemede", "Onaylandı", "Reddedildi", "Arşivlendi"])
     with f_col3:
         search_filter = st.text_input("Doküman Adı / No Ara...")
 
@@ -155,7 +164,7 @@ if st.session_state.current_view == 'dashboard':
             cols[2].write(d['type'])
             cols[3].write(d['date'])
             
-            status_color = "orange" if d['status'] == "Beklemede" else "green" if d['status'] == "Onaylandı" else "red"
+            status_color = "orange" if d['status'] == "Beklemede" else "green" if d['status'] == "Onaylandı" else "red" if d['status'] == "Reddedildi" else "grey"
             cols[4].markdown(f"**:{status_color}[{d['status']}]**")
             
             with cols[5]:
@@ -179,7 +188,7 @@ elif st.session_state.current_view == 'detail':
         col2.markdown(f"**Yükleyen:** {doc['uploader']}")
         col3.markdown(f"**Onaylayan:** {doc['approver']}")
         
-        status_color = "orange" if doc['status'] == "Beklemede" else "green" if doc['status'] == "Onaylandı" else "red"
+        status_color = "orange" if doc['status'] == "Beklemede" else "green" if doc['status'] == "Onaylandı" else "red" if doc['status'] == "Reddedildi" else "grey"
         col3.markdown(f"**Durum:** :{status_color}[{doc['status']}]")
         
         if doc['feedback']:
