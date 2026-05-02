@@ -132,6 +132,7 @@ if st.session_state.current_view == 'dashboard':
     # Upload Section (RBAC Check)
     if current_role in ["Mühendis", "Müdür"]:
         with st.expander("Yeni Doküman Yükle", expanded=False):
+            upload_type = st.radio("İşlem Tipi", ["İlk Kez Yükleme (Yeni Doküman)", "Mevcut Dokümanı Revize Et"], horizontal=True)
             with st.form("upload_form"):
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -141,7 +142,6 @@ if st.session_state.current_view == 'dashboard':
                 with col3:
                     doc_type = st.selectbox("Tip", ["Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
                 
-                upload_type = st.radio("İşlem Tipi", ["İlk Kez Yükleme (Yeni Doküman)", "Mevcut Dokümanı Revize Et"], horizontal=True)
                 uploaded_file = st.file_uploader("PDF Seçin", type=['pdf'])
                 
                 if upload_type == "Mevcut Dokümanı Revize Et":
