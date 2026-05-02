@@ -141,30 +141,42 @@ if st.session_state.current_view == 'dashboard':
                 with col3:
                     doc_type = st.selectbox("Tip", ["Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
                 
+                upload_type = st.radio("İşlem Tipi", ["İlk Kez Yükleme (Yeni Doküman)", "Mevcut Dokümanı Revize Et"], horizontal=True)
                 uploaded_file = st.file_uploader("PDF Seçin", type=['pdf'])
                 
-                st.markdown("---")
-                st.markdown("### Değişiklik / Revizyon Gerekçesi")
-                col_r1, col_r2 = st.columns(2)
-                with col_r1:
-                    rev_reason = st.text_area("Değişiklik Sebebi", placeholder="Örn: Müşteri şikayeti üzerine toleranslar daraltıldı.")
-                with col_r2:
-                    affected_op = st.text_area("Etkilenen Operasyon", placeholder="Örn: CNC Freze - Operasyon 20")
-                diff_desc = st.text_area("Eski vs Yeni Fark Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
+                if upload_type == "Mevcut Dokümanı Revize Et":
+                    st.markdown("---")
+                    st.markdown("### Değişiklik / Revizyon Gerekçesi")
+                    col_r1, col_r2 = st.columns(2)
+                    with col_r1:
+                        rev_reason = st.text_area("Değişiklik Sebebi", placeholder="Örn: Müşteri şikayeti üzerine toleranslar daraltıldı.")
+                    with col_r2:
+                        affected_op = st.text_area("Etkilenen Operasyon", placeholder="Örn: CNC Freze - Operasyon 20")
+                    diff_desc = st.text_area("Eski vs Yeni Fark Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
+                else:
+                    rev_reason = ""
+                    affected_op = ""
+                    diff_desc = ""
                     
                 submitted = st.form_submit_button("İleri: Onay Akışını Belirle")
 
                 if submitted:
                     if uploaded_file is not None and doc_no and doc_name:
-                        # Check pending via API
                         try:
                             docs = requests.get(f"{API_URL}/documents/").json()
-                            pending_rev = next((d for d in docs if d['doc_no'] == doc_no and d['status'] == 'Beklemede'), None)
-                            if pending_rev:
-                                st.error(f"Hata: {doc_no} numaralı dokümanın şu anda incelemede olan bir revizyonu var.")
+                            existing_docs = [d for d in docs if d['doc_no'] == doc_no]
+                            
+                            if upload_type == "İlk Kez Yükleme (Yeni Doküman)" and len(existing_docs) > 0:
+                                st.error(f"Hata: {doc_no} numaralı doküman sistemde zaten var. Güncellemek için 'Mevcut Dokümanı Revize Et' seçeneğini işaretleyin.")
+                            elif upload_type == "Mevcut Dokümanı Revize Et" and len(existing_docs) == 0:
+                                st.error(f"Hata: {doc_no} numaralı doküman sistemde bulunamadı. Lütfen 'İlk Kez Yükleme' seçeneğini kullanın.")
                             else:
-                                file_bytes = uploaded_file.read()
-                                approval_flow_dialog(doc_no, doc_name, doc_type, rev_reason, affected_op, diff_desc, file_bytes, uploaded_file.name, uploaded_file.type)
+                                pending_rev = next((d for d in existing_docs if d['status'] == 'Beklemede'), None)
+                                if pending_rev:
+                                    st.error(f"Hata: {doc_no} numaralı dokümanın şu anda incelemede olan bir revizyonu var.")
+                                else:
+                                    file_bytes = uploaded_file.read()
+                                    approval_flow_dialog(doc_no, doc_name, doc_type, rev_reason, affected_op, diff_desc, file_bytes, uploaded_file.name, uploaded_file.type)
                         except Exception as e:
                             st.error(f"Bağlantı hatası: {e}")
                     else:
