@@ -3,6 +3,8 @@ import pandas as pd
 import datetime
 import base64
 
+st.set_page_config(page_title="Teknik Doküman Yönetimi", layout="wide")
+
 USERS = [
     {"name": "Ahmet", "role": "Kalite"},
     {"name": "Fatma", "role": "Kalite"},
