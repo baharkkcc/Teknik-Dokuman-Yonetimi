@@ -88,8 +88,50 @@ def reject_for_user(doc_id, user_name, feedback):
             
     check_overall_status(doc)
 
+@st.dialog("Onay Akışını Belirle")
+def approval_flow_dialog(doc_data):
+    st.markdown("Lütfen bu doküman için onaylayıcıları belirleyin:")
+    
+    suggested_names = ["Ahmet", "Ali"]
+    if doc_data['type'] == "Teknik Resim":
+        suggested_names = ["Fatma", "Veli", "Mehmet"]
+        st.info("💡 Akıllı Öneri: 'Teknik Resim' tipi dokümanlar geçmişte genelde Fatma (Kalite), Veli (Mühendis) ve Mehmet (Tasarım) tarafından onaylanmış. Sistem bu kişileri otomatik seçti.")
+    else:
+        st.info("💡 Akıllı Öneri: Bu tip dokümanlar geçmişte genelde Ahmet (Kalite) ve Ali (Mühendis) tarafından onaylanmış.")
+    
+    selected_approver_names = st.multiselect(
+        "Onaylayacak Kişiler:", 
+        [u['name'] for u in USERS], 
+        default=suggested_names
+    )
+    
+    selected_roles = [get_user(name)['role'] for name in selected_approver_names]
+    has_kalite = "Kalite" in selected_roles
+    has_muhendis = "Mühendis" in selected_roles
+    
+    if not has_kalite or not has_muhendis:
+        st.warning("⚠️ DİKKAT: Kalite ve Mühendis rollerinden en az 1'er kişi seçilmelidir.")
+    else:
+        st.success("✅ Gerekli tüm zorunlu roller (Kalite, Mühendis) seçildi.")
+        
+    if st.button("Sonlandır ve Yükle", type="primary"):
+        if not has_kalite or not has_muhendis:
+            st.error("Kurallara aykırı: Kalite ve Mühendis rolünden en az 1 kişi seçmelisiniz!")
+        else:
+            approvals = []
+            for name in selected_approver_names:
+                approvals.append({
+                    "name": name,
+                    "role": get_user(name)['role'],
+                    "status": "Bekliyor",
+                    "feedback": ""
+                })
+            doc_data['approvals'] = approvals
+            st.session_state.documents.append(doc_data)
+            st.success("Doküman başarıyla yüklendi ve onay akışı başlatıldı!")
+            st.rerun()
+
 # --- UI Setup ---
-st.set_page_config(page_title="Teknik Doküman Yönetimi", layout="wide")
 
 if st.session_state.current_view == 'dashboard':
     st.title("Teknik Doküman Yönetimi")
@@ -107,33 +149,6 @@ if st.session_state.current_view == 'dashboard':
                 doc_type = st.selectbox("Tip", ["Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
             
             st.markdown("---")
-            st.markdown("### 👥 Onay Akışı Belirleme")
-            
-            # Smart Suggestion logic
-            suggested_names = ["Ahmet", "Ali"]
-            if doc_type == "Teknik Resim":
-                suggested_names = ["Fatma", "Veli", "Mehmet"]
-                st.info("💡 Akıllı Öneri: 'Teknik Resim' tipi dokümanlar geçmişte genelde Fatma (Kalite), Veli (Mühendis) ve Mehmet (Tasarım) tarafından onaylanmış. Sistem bu kişileri otomatik seçti.")
-            else:
-                st.info("💡 Akıllı Öneri: Bu tip dokümanlar geçmişte genelde Ahmet (Kalite) ve Ali (Mühendis) tarafından onaylanmış.")
-            
-            selected_approver_names = st.multiselect(
-                "Onaylayacak Kişiler (Sistem önerisi eklendi, istediğiniz gibi değiştirebilirsiniz):", 
-                [u['name'] for u in USERS], 
-                default=suggested_names
-            )
-            
-            # Validate roles
-            selected_roles = [get_user(name)['role'] for name in selected_approver_names]
-            has_kalite = "Kalite" in selected_roles
-            has_muhendis = "Mühendis" in selected_roles
-            
-            if not has_kalite or not has_muhendis:
-                st.warning("⚠️ DİKKAT: Kalite ve Mühendis rollerinden en az 1'er kişi seçilmelidir. Lütfen bu rolleri boş bırakmayın.")
-            else:
-                st.success("✅ Gerekli tüm zorunlu roller (Kalite, Mühendis) seçildi.")
-                
-            st.markdown("---")
             st.markdown("### 🚀 Değişiklik / Revizyon Gerekçesi")
             col_r1, col_r2 = st.columns(2)
             with col_r1:
@@ -143,12 +158,10 @@ if st.session_state.current_view == 'dashboard':
             diff_desc = st.text_area("Eski vs Yeni Fark Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
                 
             uploaded_file = st.file_uploader("PDF Seçin", type=['pdf'])
-            submitted = st.form_submit_button("Yükle ve Onaya Gönder")
+            submitted = st.form_submit_button("İleri: Onay Akışını Belirle")
 
             if submitted:
-                if not has_kalite or not has_muhendis:
-                    st.error("Kurallara aykırı: Kalite ve Mühendis rolünden en az 1 kişi seçmelisiniz!")
-                elif uploaded_file is not None and doc_no and doc_name:
+                if uploaded_file is not None and doc_no and doc_name:
                     pending_rev = next((d for d in st.session_state.documents if d['docNo'] == doc_no and d['status'] == 'Beklemede'), None)
                     if pending_rev:
                         st.error(f"Hata: {doc_no} numaralı dokümanın şu anda incelemede olan bir revizyonu var. Aynı anda birden fazla revizyon onaya sunulamaz.")
@@ -161,23 +174,13 @@ if st.session_state.current_view == 'dashboard':
                         now = datetime.datetime.now()
                         date_str = f"{now.day} {months[now.month]} {now.year}"
                         
-                        approvals = []
-                        for name in selected_approver_names:
-                            approvals.append({
-                                "name": name,
-                                "role": get_user(name)['role'],
-                                "status": "Bekliyor",
-                                "feedback": ""
-                            })
-                            
-                        new_doc = {
+                        doc_data = {
                             "id": int(now.timestamp()),
                             "docNo": doc_no,
                             "docName": doc_name,
                             "type": doc_type,
                             "date": date_str,
                             "uploader": "Mevcut Kullanıcı",
-                            "approvals": approvals,
                             "revReason": rev_reason,
                             "affectedOp": affected_op,
                             "diffDesc": diff_desc,
@@ -185,9 +188,8 @@ if st.session_state.current_view == 'dashboard':
                             "status": "Beklemede",
                             "fileData": file_data_url
                         }
-                        st.session_state.documents.append(new_doc)
-                        st.success("Doküman başarıyla yüklendi ve onay akışı başlatıldı!")
-                        st.rerun()
+                        
+                        approval_flow_dialog(doc_data)
                 else:
                     st.error("Lütfen tüm alanları doldurun ve bir PDF dosyası seçin.")
 
