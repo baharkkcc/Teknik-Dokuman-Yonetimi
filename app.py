@@ -133,6 +133,15 @@ if st.session_state.current_view == 'dashboard':
             else:
                 st.success("✅ Gerekli tüm zorunlu roller (Kalite, Mühendis) seçildi.")
                 
+            st.markdown("---")
+            st.markdown("### 🚀 Değişiklik / Revizyon Gerekçesi")
+            col_r1, col_r2 = st.columns(2)
+            with col_r1:
+                rev_reason = st.text_area("Değişiklik Sebebi", placeholder="Örn: Müşteri şikayeti üzerine toleranslar daraltıldı.")
+            with col_r2:
+                affected_op = st.text_area("Etkilenen Operasyon", placeholder="Örn: CNC Freze - Operasyon 20")
+            diff_desc = st.text_area("Eski vs Yeni Fark Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
+                
             uploaded_file = st.file_uploader("PDF Seçin", type=['pdf'])
             submitted = st.form_submit_button("Yükle ve Onaya Gönder")
 
@@ -169,6 +178,9 @@ if st.session_state.current_view == 'dashboard':
                             "date": date_str,
                             "uploader": "Mevcut Kullanıcı",
                             "approvals": approvals,
+                            "revReason": rev_reason,
+                            "affectedOp": affected_op,
+                            "diffDesc": diff_desc,
                             "file": uploaded_file.name,
                             "status": "Beklemede",
                             "fileData": file_data_url
@@ -245,6 +257,18 @@ elif st.session_state.current_view == 'detail':
         status_color = "orange" if doc['status'] == "Beklemede" else "green" if doc['status'] == "Onaylandı" else "red" if doc['status'] == "Reddedildi" else "grey"
         col3.markdown(f"**Genel Durum:** :{status_color}[{doc['status']}]")
         
+        if doc.get('revReason') or doc.get('affectedOp') or doc.get('diffDesc'):
+            st.markdown("---")
+            st.markdown("### 🚀 Değişiklik & Revizyon Raporu")
+            r_col1, r_col2, r_col3 = st.columns(3)
+            with r_col1:
+                st.info(f"**Değişiklik Sebebi:**\n\n{doc.get('revReason', '-')}")
+            with r_col2:
+                st.warning(f"**Etkilenen Operasyon:**\n\n{doc.get('affectedOp', '-')}")
+            with r_col3:
+                st.success(f"**Eski vs Yeni Fark:**\n\n{doc.get('diffDesc', '-')}")
+        
+        st.markdown("---")
         st.markdown("### 📝 Onay Akışı Durumu")
         
         for app in doc['approvals']:
