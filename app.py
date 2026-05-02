@@ -141,7 +141,7 @@ if st.session_state.current_view == 'dashboard':
     st.markdown("Modern ve güvenli doküman kontrol merkezi")
 
     # Upload Section
-    with st.expander("📁 Yeni Doküman Yükle", expanded=True):
+    with st.expander("📁 Yeni Doküman Yükle", expanded=False):
         with st.form("upload_form"):
             col1, col2, col3 = st.columns(3)
             with col1:
