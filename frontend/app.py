@@ -205,9 +205,20 @@ if st.session_state.current_view == 'dashboard':
     filtered_docs = []
     for d in all_docs:
         if type_filter != "Tümü" and d['doc_type'] != type_filter: continue
+        
         if status_filter == "Aktif Olanlar" and d['status'] == "Arşivlendi": continue
         if status_filter not in ["Aktif Olanlar", "Tümü (Arşiv Dahil)"] and d['status'] != status_filter: continue
-        if search_filter.lower() not in d['doc_no'].lower() and search_filter.lower() not in d['doc_name'].lower(): continue
+        
+        if search_filter:
+            search_terms = search_filter.lower().strip().split()
+            match = True
+            for term in search_terms:
+                if term not in d['doc_no'].lower() and term not in d['doc_name'].lower():
+                    match = False
+                    break
+            if not match:
+                continue
+                
         filtered_docs.append(d)
     
     if len(filtered_docs) == 0:
