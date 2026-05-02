@@ -6,6 +6,18 @@ import json
 
 st.set_page_config(page_title="Teknik Doküman Yönetimi", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 1rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 USERS = [
