@@ -184,6 +184,8 @@ if st.session_state.current_view == 'dashboard':
                 with col3:
                     doc_type = st.selectbox("Tip", ["Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
                 
+                uploaded_file = st.file_uploader("PDF Seçin", type=['pdf'])
+                
                 st.markdown("---")
                 st.markdown("### 🚀 Değişiklik / Revizyon Gerekçesi")
                 col_r1, col_r2 = st.columns(2)
@@ -193,7 +195,6 @@ if st.session_state.current_view == 'dashboard':
                     affected_op = st.text_area("Etkilenen Operasyon", placeholder="Örn: CNC Freze - Operasyon 20")
                 diff_desc = st.text_area("Eski vs Yeni Fark Özeti", placeholder="Örn: Çap 20±0.1 olan ölçü 20±0.05 olarak güncellendi.")
                     
-                uploaded_file = st.file_uploader("PDF Seçin", type=['pdf'])
                 submitted = st.form_submit_button("İleri: Onay Akışını Belirle")
 
                 if submitted:
