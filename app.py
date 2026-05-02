@@ -24,6 +24,7 @@ if 'documents' not in st.session_state:
             "docNo": "DOC-2024-001",
             "docName": "Tesis Güvenlik Prosedürü",
             "type": "Prosedür",
+            "revision": 2,
             "date": "02 Mayıs 2026",
             "uploader": "Sistem",
             "approvals": [
@@ -174,11 +175,15 @@ if st.session_state.current_view == 'dashboard':
                         now = datetime.datetime.now()
                         date_str = f"{now.day} {months[now.month]} {now.year}"
                         
+                        existing_docs = [d for d in st.session_state.documents if d['docNo'] == doc_no]
+                        new_rev_number = max([d.get('revision', 0) for d in existing_docs]) + 1 if existing_docs else 1
+                        
                         doc_data = {
                             "id": int(now.timestamp()),
                             "docNo": doc_no,
                             "docName": doc_name,
                             "type": doc_type,
+                            "revision": new_rev_number,
                             "date": date_str,
                             "uploader": "Mevcut Kullanıcı",
                             "revReason": rev_reason,
@@ -200,7 +205,7 @@ if st.session_state.current_view == 'dashboard':
     with f_col1:
         type_filter = st.selectbox("Tip Filtresi", ["Tümü", "Prosedür", "Talimat", "Kılavuz", "Şartname", "Form", "Teknik Resim", "Operasyon Planı", "Standart"])
     with f_col2:
-        status_filter = st.selectbox("Durum Filtresi", ["Tümü", "Beklemede", "Onaylandı", "Reddedildi", "Arşivlendi"])
+        status_filter = st.selectbox("Durum Filtresi", ["Aktif Olanlar", "Beklemede", "Onaylandı", "Reddedildi", "Arşivlendi", "Tümü (Arşiv Dahil)"])
     with f_col3:
         search_filter = st.text_input("Doküman Adı / No Ara...")
 
@@ -208,7 +213,10 @@ if st.session_state.current_view == 'dashboard':
     filtered_docs = []
     for d in st.session_state.documents:
         if type_filter != "Tümü" and d['type'] != type_filter: continue
-        if status_filter != "Tümü" and d['status'] != status_filter: continue
+        
+        if status_filter == "Aktif Olanlar" and d['status'] == "Arşivlendi": continue
+        if status_filter not in ["Aktif Olanlar", "Tümü (Arşiv Dahil)"] and d['status'] != status_filter: continue
+        
         if search_filter.lower() not in d['docNo'].lower() and search_filter.lower() not in d['docName'].lower(): continue
         filtered_docs.append(d)
     
@@ -217,26 +225,28 @@ if st.session_state.current_view == 'dashboard':
     else:
         filtered_docs.sort(key=lambda x: x['id'], reverse=True)
         
-        cols = st.columns([1.5, 2, 1, 1.5, 1, 1])
+        cols = st.columns([1.5, 2, 1, 1, 1.5, 1, 1])
         cols[0].markdown("**Döküman No**")
         cols[1].markdown("**Doküman Adı**")
-        cols[2].markdown("**Tip**")
-        cols[3].markdown("**Tarih**")
-        cols[4].markdown("**Durum**")
-        cols[5].markdown("**İşlem**")
+        cols[2].markdown("**Revizyon**")
+        cols[3].markdown("**Tip**")
+        cols[4].markdown("**Tarih**")
+        cols[5].markdown("**Durum**")
+        cols[6].markdown("**İşlem**")
         st.markdown("---")
         
         for d in filtered_docs:
-            cols = st.columns([1.5, 2, 1, 1.5, 1, 1])
+            cols = st.columns([1.5, 2, 1, 1, 1.5, 1, 1])
             cols[0].write(d['docNo'])
             cols[1].write(d['docName'])
-            cols[2].write(d['type'])
-            cols[3].write(d['date'])
+            cols[2].write(f"v{d.get('revision', 1)}")
+            cols[3].write(d['type'])
+            cols[4].write(d['date'])
             
             status_color = "orange" if d['status'] == "Beklemede" else "green" if d['status'] == "Onaylandı" else "red" if d['status'] == "Reddedildi" else "grey"
-            cols[4].markdown(f"**:{status_color}[{d['status']}]**")
+            cols[5].markdown(f"**:{status_color}[{d['status']}]**")
             
-            with cols[5]:
+            with cols[6]:
                 if st.button("İncele", key=f"view_{d['id']}"):
                     view_document(d['id'])
                     st.rerun()
