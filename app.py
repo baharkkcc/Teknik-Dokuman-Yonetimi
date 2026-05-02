@@ -110,9 +110,9 @@ def approval_flow_dialog(doc_data):
     suggested_names = ["Ahmet", "Ali"]
     if doc_data['type'] == "Teknik Resim":
         suggested_names = ["Fatma", "Veli", "Mehmet"]
-        st.info("💡 Akıllı Öneri: 'Teknik Resim' tipi dokümanlar geçmişte genelde Fatma (Kalite), Veli (Mühendis) ve Mehmet (Tasarım) tarafından onaylanmış. Sistem bu kişileri otomatik seçti.")
+        st.info("Bilgi: 'Teknik Resim' tipi dokümanlar geçmişte genelde Fatma (Kalite), Veli (Mühendis) ve Mehmet (Tasarım) tarafından onaylanmış. Sistem bu kişileri otomatik seçti.")
     else:
-        st.info("💡 Akıllı Öneri: Bu tip dokümanlar geçmişte genelde Ahmet (Kalite) ve Ali (Mühendis) tarafından onaylanmış.")
+        st.info("Bilgi: Bu tip dokümanlar geçmişte genelde Ahmet (Kalite) ve Ali (Mühendis) tarafından onaylanmış.")
     
     selected_approver_names = st.multiselect(
         "Onaylayacak Kişiler:", 
@@ -125,9 +125,9 @@ def approval_flow_dialog(doc_data):
     has_muhendis = "Mühendis" in selected_roles
     
     if not has_kalite or not has_muhendis:
-        st.warning("⚠️ DİKKAT: Kalite ve Mühendis rollerinden en az 1'er kişi seçilmelidir.")
+        st.warning("DİKKAT: Kalite ve Mühendis rollerinden en az 1'er kişi seçilmelidir.")
     else:
-        st.success("✅ Gerekli tüm zorunlu roller (Kalite, Mühendis) seçildi.")
+        st.success("Gerekli tüm zorunlu roller (Kalite, Mühendis) seçildi.")
         
     if st.button("Sonlandır ve Yükle", type="primary"):
         if not has_kalite or not has_muhendis:
@@ -148,9 +148,9 @@ def approval_flow_dialog(doc_data):
             st.rerun()
 
 # --- UI Setup ---
-st.sidebar.title("🔐 Güvenlik & RBAC")
+st.sidebar.title("Güvenlik ve Erişim Kontrolü")
 current_role = st.sidebar.selectbox(
-    "👤 Aktif Rol (Demo Login)", 
+    "Aktif Rol (Demo Login)", 
     ["Operatör", "Mühendis", "Müdür"], 
     index=1,
     help="Rol bazlı erişim testi. Operatör: Sadece görüntüler. Mühendis: Yükler. Müdür: Onaylar."
@@ -158,7 +158,7 @@ current_role = st.sidebar.selectbox(
 st.session_state.current_role = current_role
 
 st.sidebar.markdown("---")
-with st.sidebar.expander("📜 Sistem Denetim İzleri (Audit Log)", expanded=False):
+with st.sidebar.expander("Sistem Denetim İzleri (Audit Log)", expanded=False):
     if len(st.session_state.audit_log) == 0:
         st.info("Henüz bir işlem kaydedilmedi.")
     else:
@@ -174,7 +174,7 @@ if st.session_state.current_view == 'dashboard':
 
     # Upload Section (RBAC Check)
     if current_role in ["Mühendis", "Müdür"]:
-        with st.expander("📁 Yeni Doküman Yükle", expanded=False):
+        with st.expander("Yeni Doküman Yükle", expanded=False):
             with st.form("upload_form"):
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -187,7 +187,7 @@ if st.session_state.current_view == 'dashboard':
                 uploaded_file = st.file_uploader("PDF Seçin", type=['pdf'])
                 
                 st.markdown("---")
-                st.markdown("### 🚀 Değişiklik / Revizyon Gerekçesi")
+                st.markdown("### Değişiklik / Revizyon Gerekçesi")
                 col_r1, col_r2 = st.columns(2)
                 with col_r1:
                     rev_reason = st.text_area("Değişiklik Sebebi", placeholder="Örn: Müşteri şikayeti üzerine toleranslar daraltıldı.")
@@ -234,7 +234,7 @@ if st.session_state.current_view == 'dashboard':
                     else:
                         st.error("Lütfen tüm alanları doldurun ve bir PDF dosyası seçin.")
     else:
-        st.info("🔒 Operatör rolündesiniz. Sisteme doküman yükleme veya onaylama yetkiniz bulunmamaktadır. Yalnızca mevcut dokümanları görüntüleyebilirsiniz.")
+        st.info("Yetki Sınırı: Operatör rolündesiniz. Sisteme doküman yükleme veya onaylama yetkiniz bulunmamaktadır. Yalnızca mevcut dokümanları görüntüleyebilirsiniz.")
 
     st.subheader("Doküman Listesi")
 
@@ -290,7 +290,7 @@ if st.session_state.current_view == 'dashboard':
 elif st.session_state.current_view == 'detail':
     doc = next((d for d in st.session_state.documents if d['id'] == st.session_state.selected_doc_id), None)
     if doc:
-        if st.button("⬅ Listeye Dön"):
+        if st.button("Listeye Dön"):
             go_to_dashboard()
             st.rerun()
             
@@ -307,7 +307,7 @@ elif st.session_state.current_view == 'detail':
         
         if doc.get('revReason') or doc.get('affectedOp') or doc.get('diffDesc'):
             st.markdown("---")
-            st.markdown("### 🚀 Değişiklik & Revizyon Raporu")
+            st.markdown("### Değişiklik ve Revizyon Raporu")
             r_col1, r_col2, r_col3 = st.columns(3)
             with r_col1:
                 st.info(f"**Değişiklik Sebebi:**\n\n{doc.get('revReason', '-')}")
@@ -317,7 +317,7 @@ elif st.session_state.current_view == 'detail':
                 st.success(f"**Eski vs Yeni Fark:**\n\n{doc.get('diffDesc', '-')}")
         
         st.markdown("---")
-        st.markdown("### 📝 Onay Akışı Durumu")
+        st.markdown("### Onay Akışı Durumu")
         
         has_pending_actions = False
         for app in doc['approvals']:
@@ -329,18 +329,18 @@ elif st.session_state.current_view == 'detail':
                 if current_role == "Müdür":
                     sub_col1, sub_col2, sub_col3 = st.columns([2, 2, 8])
                     with sub_col1:
-                        if st.button(f"✅ Onayla ({app['name']})", key=f"app_{doc['id']}_{app['name']}"):
+                        if st.button(f"Onayla ({app['name']})", key=f"app_{doc['id']}_{app['name']}"):
                             approve_for_user(doc['id'], app['name'])
                             st.rerun()
                     with sub_col2:
-                        with st.popover(f"❌ Reddet ({app['name']})"):
+                        with st.popover(f"Reddet ({app['name']})"):
                             reject_reason = st.text_area("Ret Nedeni", key=f"rej_res_{doc['id']}_{app['name']}")
                             if st.button("Kaydet", key=f"rej_btn_{doc['id']}_{app['name']}"):
                                 reject_for_user(doc['id'], app['name'], reject_reason)
                                 st.rerun()
                                 
         if has_pending_actions and current_role != "Müdür":
-            st.warning("🔒 Sadece 'Müdür' rolündeki kullanıcılar onay/ret işlemi gerçekleştirebilir.")
+            st.warning("Yetki Sınırı: Sadece 'Müdür' rolündeki kullanıcılar onay/ret işlemi gerçekleştirebilir.")
                             
         st.markdown("---")
         
@@ -351,16 +351,16 @@ elif st.session_state.current_view == 'detail':
             if expiry and now < expiry:
                 time_left = expiry - now
                 mins, secs = divmod(time_left.seconds, 60)
-                st.success(f"🔐 Güvenli Geçici Bağlantı (Signed URL) ile korunmaktadır. (Kalan Süre: {mins} dk {secs} sn)")
+                st.success(f"Güvenli Geçici Bağlantı (Signed URL) ile korunmaktadır. (Kalan Süre: {mins} dk {secs} sn)")
                 st.markdown(f'<iframe src="{doc["fileData"]}" width="100%" height="800px" style="border: none; border-radius: 8px;"></iframe>', unsafe_allow_html=True)
                 
                 # Add a download simulation button that logs
-                if st.button("⬇️ Güvenli İndir (Audit Log'a Kaydedilir)"):
+                if st.button("Güvenli İndir (Audit Log'a Kaydedilir)"):
                     log_action("İndirdi", doc['docNo'])
-                    st.toast(f"✅ {doc['docNo']} cihazınıza indirildi ve denetim izine kaydedildi.")
+                    st.toast(f"{doc['docNo']} cihazınıza indirildi ve denetim izine kaydedildi.")
             else:
-                st.error("🔒 Güvenli erişim bağlantınızın süresi dolmuştur. Lütfen listeye dönüp dokümanı yeniden açarak yeni bir bağlantı (Signed URL) oluşturun.")
-                if st.button("🔄 Yeni Bağlantı Oluştur"):
+                st.error("Güvenli erişim bağlantınızın süresi dolmuştur. Lütfen listeye dönüp dokümanı yeniden açarak yeni bir bağlantı (Signed URL) oluşturun.")
+                if st.button("Yeni Bağlantı Oluştur"):
                     view_document(doc['id'])
                     st.rerun()
         else:
